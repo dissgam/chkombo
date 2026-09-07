@@ -83,6 +83,12 @@ function injectSwPrecache(game: string | undefined, iconPath: string | undefined
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
+  // Fallbacks so the build never hard-fails if .env files are absent
+  // in the build environment (e.g. a fresh CI checkout). .env / .env.scopa
+  // override these when present.
+  if (!env.VITE_GAME) env.VITE_GAME = 'scopa'
+  if (!env.VITE_ICON_PATH) env.VITE_ICON_PATH = '/scopa-icon.svg'
+  if (!env.VITE_STATIC_CACHE_VER) env.VITE_STATIC_CACHE_VER = 'v1'
   // Version shown in the start-screen footer so a device's running build
   // is verifiable at a glance: v1.<commit count> (date) — monotonic and
   // maintenance-free. The tooltip carries build time UTC + git commit.
