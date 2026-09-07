@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <!-- PNG icons first so Android home-screen / shortcut selection uses
+       the raster app icon (the card-fan PNG) rather than falling back
+       to the small SVG favicon. SVG is kept for crisp browser tabs. -->
+  <link rel="icon" type="image/png" sizes="512x512" href="/pwa-512.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192.png" />
+  <link rel="icon" type="image/svg+xml" href="%VITE_ICON_PATH%" />
+  <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192.png" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <!-- Desktop-site mode rescue. When Chrome's "Desktop site" is on
+       (global or per-site), a phone gets a layout viewport locked at
+       ~980px on a physically ~412px screen, which the page CANNOT
+       override (width=device-width AND a fixed numeric width are both
+       ignored — confirmed on-device). So the media queries stay on the
+       desktop layout and everything renders microscopic (a real 2-star
+       review hit this). `zoom` doesn't move the media queries on real
+       Chrome, so instead we: add an `html.dmode` class and a
+       `--dmode-scale` var; CSS then forces the app into a TARGET-wide
+       (412px) mobile column and scales it up by --dmode-scale to fill
+       the locked viewport, restoring a readable, true mobile layout.
+
+       Strict guards so it fires ONLY for a phone forced into desktop
+       mode, and is a no-op for everyone else:
+         - UA has no "Mobile"        -> desktop UA (desktop-site or PC)
+         - primary pointer is coarse -> touch is the main input
+         - NO fine pointer anywhere  -> excludes touch laptops/desktops
+         - viewport > 900px          -> implausibly wide for a real phone
+         - viewport >> physical screen (innerWidth > screen.width*1.4)
+           -> the layout viewport is INFLATED vs the device. A real
+              touch tablet (Surface Pro, iPad) has innerWidth ~=
+              screen.width, so this excludes them; only a phone whose
+              desktop-mode viewport balloons past its screen trips it.
+       Runs before first paint, and re-applies on resize/orientation. -->
+  <script>
+    (function () {
+      function applyDesktopModeFix() {
+        var el = document.documentElement;
+        var raw = window.innerWidth;
+        var scr = (window.screen && window.screen.width) || raw;
+        var forced =
+          !/Mobile/i.test(navigator.userAgent) &&
+          window.matchMedia('(pointer: coarse)').matches &&
+          !window.matchMedia('(any-pointer: fine)').matches &&
+          raw > 900 &&
+          raw > scr * 1.4; // viewport much wider than the physical screen
+        if (forced) {
+          // Render the mobile column at the device's REAL physical
+          // width (screen.width — confirmed = the native CSS width on a
+          // phone in desktop mode), so it's 1:1 on every phone instead
+          // of a fixed 412. scale = inflated viewport / physical width.
+          // IDEMPOTENT: only write when a value actually changes, so the
+          // constant resize stream (address bar show/hide, etc.) doesn't
+          // churn the class/vars — that re-triggered the MutationObserver
+          // in useDesktopMode and restarted card animations mid-play.
+          var w = scr + 'px';
+          var s = (raw / scr).toFixed(4);
+          if (el.style.getPropertyValue('--dmode-width') !== w)
+            el.style.setProperty('--dmode-width', w);
+          if (el.style.getPropertyValue('--dmode-scale') !== s)
+            el.style.setProperty('--dmode-scale', s);
+          if (!el.classList.contains('dmode')) el.classList.add('dmode');
+        } else if (el.classList.contains('dmode')) {
+          el.classList.remove('dmode');
+          el.style.removeProperty('--dmode-scale');
+          el.style.removeProperty('--dmode-width');
+        }
+      }
+      applyDesktopModeFix();
+      window.addEventListener('resize', applyDesktopModeFix);
+      window.addEventListener('orientationchange', applyDesktopModeFix);
+    })();
+  </script>
+  <!-- Seed the accessibility "Text size" scale before first paint (the
+       useSettings hook keeps it live afterwards), so users who picked a
+       larger size don't get a flash of default-size text on load. -->
+  <script>
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('scopa-settings') || '{}');
+        // Fall back to the 1.2 (Normal) default when unset, matching
+        // DEFAULT_SETTINGS, so first-time users get it without a flash.
+        var fs = (s && typeof s.fontScale === 'number') ? s.fontScale : 1.2;
+        document.documentElement.style.setProperty('--font-scale', fs);
+      } catch (e) { }
+    })();
+  </script>
+  <meta name="theme-color" content="%VITE_THEME_COLOR%" />
+  <meta name="description" content="%VITE_APP_DESCRIPTION%" />
+
+  <!-- Open Graph / Twitter social-share cards. og:image is provided
+       EXPLICITLY (with absolute URL) — the Facebook debugger warns when
+       it's only inferred from other tags. The 512×512 app icon is the
+       share image; VITE_SITE_URL is the per-game canonical origin. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="%VITE_APP_NAME%" />
+  <meta property="og:title" content="%VITE_APP_NAME%" />
+  <meta property="og:description" content="%VITE_APP_DESCRIPTION%" />
+  <meta property="og:url" content="%VITE_SITE_URL%/" />
+  <meta property="og:image" content="%VITE_SITE_URL%/pwa-512.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:image:alt" content="%VITE_APP_NAME%" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="%VITE_APP_NAME%" />
+  <meta name="twitter:description" content="%VITE_APP_DESCRIPTION%" />
+  <meta name="twitter:image" content="%VITE_SITE_URL%/pwa-512.png" />
+
+  <!-- Canonical URL — VITE_SITE_URL is the primary domain. Alias domains
+       keep serving the app (the Android TWA and installed PWAs are bound
+       to them); this tag points search engines at the primary. -->
+  <link rel="canonical" href="%VITE_SITE_URL%/" />
+
+  <!-- iOS standalone PWA install -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="%VITE_APP_NAME%" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>%VITE_APP_NAME%</title>
+
+  <!-- Umami, Plausible -->
+  <script defer src="%VITE_UMAMI_SCRIPT_URL%" data-website-id="%VITE_UMAMI_WEBSITE_ID%"></script>
+  <script async src="%VITE_PLAUSIBLE_SCRIPT_URL%"></script>
+  <script>
+    window.plausible = window.plausible || function () { (plausible.q = plausible.q || []).push(arguments) }, plausible.init = plausible.init || function (i) { plausible.o = i || {} };
+    plausible.init()
+  </script>
+
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+
+  <!-- Swetrix -->
+  <script src="%VITE_SWETRIX_SCRIPT_URL%" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // The loader above comes from an external CDN and never arrives on
+      // an offline (airplane-mode) launch — don't throw in that case.
+      if (typeof swetrix === 'undefined') return
+      // Exclude development/testing traffic: only production hostnames
+      // report analytics (localhost dev servers, *.test Playwright runs).
+      var h = location.hostname
+      if (h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost') ||
+          h.endsWith('.test') || h.endsWith('.local')) return
+      swetrix.init('%VITE_SWETRIX_PROJECT_ID%', {
+        apiURL: '%VITE_SWETRIX_API_URL%',
+        respectDNT: true,
+      })
+      swetrix.trackViews()
+      // Gate for in-app gameplay events (src/analytics.ts).
+      window.__swetrixReady = true
+    })
+  </script>
+
+  <!-- Register Service Worker for offline support.
+       Skip in Vite dev (localhost): the SW's /index.html fallback
+       intercepts module-script requests (returning HTML for .tsx →
+       MIME error) and hijacks the HMR WebSocket. Also unregister
+       any previously-installed SW on localhost so a stale
+       registration from a prior `vite preview` / production session
+       can't keep intercepting. Production keeps the SW unchanged. -->
+  <script>
+    // The itch.io build runs from a subpath on itch's CDN where the
+    // absolute-path service worker can't work — skip it there entirely.
+    if ('serviceWorker' in navigator && '%VITE_ITCH_MODE%' !== 'true') {
+      var __isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      if (__isDev) {
+        navigator.serviceWorker.getRegistrations()
+          .then(regs => regs.forEach(r => r.unregister()))
+          .catch(() => {});
+      } else {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.log('SW registration failed:', err));
+        });
+
+        // Warm resumes never navigate, so an app kept alive for days runs
+        // stale JS forever. Check for a new SW whenever we return to the
+        // foreground, and tell the app when one takes over — it reloads
+        // at the next safe moment (start screen, not mid-game).
+        // controllerchange also fires on the very first install claiming
+        // the page; only treat it as an update if we had a controller.
+        var __hadController = !!navigator.serviceWorker.controller;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!__hadController) { __hadController = true; return; }
+          window.__swUpdated = true;
+          window.dispatchEvent(new Event('sw-updated'));
+        });
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            navigator.serviceWorker.getRegistration()
+              .then(reg => reg && reg.update())
+              .catch(() => {});
+          }
+        });
+      }
+    }
+
+    // Request persistent storage so the SW cache and localStorage aren't
+    // evicted when the device is low on disk or the app hasn't been opened
+    // for weeks (Android: ~60 days, iOS Safari: ~7 days). Granted silently
+    // for installed PWAs/TWAs.
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persisted().then(isPersisted => {
+        if (!isPersisted) navigator.storage.persist();
+      });
+    }
+
+    // PWA installation counter
+    window.addEventListener('appinstalled', () => {
+      if (window.umami?.track) window.umami.track('pwa_install');
+      if (window.plausible) window.plausible('pwa_install');
+      if (window.swetrix?.track) window.swetrix.track({ ev: 'pwa_install' });
+    });
+  </script>
+
+  <!-- Swetrix noscript fallback -->
+  <noscript>
+    <img src="%VITE_SWETRIX_API_URL%/noscript?pid=%VITE_SWETRIX_PROJECT_ID%" alt=""
+      referrerpolicy="no-referrer-when-downgrade" />
+  </noscript>
+
+</body>
+
+</html>

@@ -1,0 +1,41 @@
+{
+  "name": "scopa",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --mode scopa",
+    "build": "tsc -b && vite build --mode scopa",
+    "build:scopa": "tsc -b && vite build --mode scopa",
+    "build:itch": "tsc -b && VITE_ITCH_MODE=true vite build --mode scopa --outDir dist-itch --base=./",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "preview:itch": "vite preview --outDir dist-itch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "simulate": "tsx scripts/simulate.ts"
+  },
+  "dependencies": {
+    "@emotion/is-prop-valid": "^1.4.0",
+    "framer-motion": "^11.15.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^25.0.10",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "terser": "^5.44.1",
+    "tsx": "^4.21.0",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "^8.18.2",
+    "vite": "^6.0.5",
+    "vitest": "^3.2.4"
+  }
+}
