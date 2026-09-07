@@ -1,0 +1,359 @@
+/* Step 8.4: RoundEndScreen Styles */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  z-index: 100;
+  padding: var(--space-4);
+}
+
+/* Card columns on each side */
+.cardColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-height: 85vh;
+  width: 320px;
+}
+
+.cardColumnLabel {
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: var(--space-1);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  overflow-y: auto;
+  max-height: calc(85vh - 40px);
+  padding: var(--space-3);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.miniCard {
+  width: 46px;
+  height: 76px;
+  border-radius: 4px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  opacity: 1;
+  background-color: #ffffff;
+}
+
+/* Scale img to clip SVG's built-in border */
+.miniCard svg,
+.miniCard img {
+  width: var(--card-img-scale);
+  height: var(--card-img-scale);
+  margin: var(--card-img-offset);
+  object-fit: cover;
+}
+
+.miniCard.highlighted {
+  box-shadow: 0 0 8px 2px var(--color-accent);
+  transform: scale(1.1);
+  z-index: 1;
+  position: relative;
+}
+
+.miniCard.dimmed {
+  opacity: 0.3;
+  filter: grayscale(50%);
+}
+
+/* Center modal */
+.modal {
+  background: linear-gradient(180deg, #1e3a2f 0%, #0d1f17 100%);
+  border: 2px solid var(--color-accent);
+  border-radius: 12px;
+  padding: var(--space-6);
+  width: fit-content;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.title {
+  text-align: center;
+  color: var(--color-accent);
+  margin: 0 0 var(--space-4);
+  font-size: 1.5rem;
+}
+
+.scoreTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-4);
+}
+
+.scoreTable th,
+.scoreTable td {
+  padding: var(--space-2) var(--space-3);
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scoreTable th {
+  color: var(--color-text-secondary);
+  font-weight: normal;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.scoreTable th:first-child,
+.scoreTable td:first-child {
+  text-align: left;
+}
+
+.scoreTable td {
+  color: var(--color-text-primary);
+}
+
+.categoryRow {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.categoryCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.categoryIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.categoryIconSvg {
+  display: block;
+}
+
+.emojiIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.categoryName {
+  white-space: nowrap;
+}
+
+.categoryRow:hover,
+.hoveredRow {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.winner {
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+.totalRow {
+  font-weight: bold;
+}
+
+.totalRow td {
+  border-top: 2px solid var(--color-accent);
+  border-bottom: none;
+  padding-top: var(--space-3);
+}
+
+.cumulativeScores {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.scoreBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.scoreLabel {
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.scoreValue {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+.scoreDivider {
+  font-size: 1.5rem;
+  color: var(--color-text-secondary);
+}
+
+.nextButton {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--color-accent);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.nextButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.nextButton:active {
+  transform: translateY(0);
+}
+
+.nextButton.autoAdvancing {
+  background: linear-gradient(90deg, var(--color-accent) 0%, rgba(212, 175, 55, 0.7) 100%);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.nextButton.buttonDisabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.nextButton.buttonDisabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.waitingSection {
+  margin-bottom: var(--space-2);
+}
+
+.waitingMessage {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Responsive: hide card columns on small screens */
+@media (max-width: 900px) {
+  .cardColumn {
+    display: none;
+  }
+}
+
+/* Mobile responsive styles */
+@media (max-width: 600px) {
+  .overlay {
+    padding: var(--space-2);
+  }
+
+  .modal {
+    padding: var(--space-4);
+    min-width: auto;
+    width: 100%;
+    max-width: 95vw;
+  }
+
+  .title {
+    font-size: 1.25rem;
+    margin-bottom: var(--space-3);
+  }
+
+  .scoreTable th,
+  .scoreTable td {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.8rem;
+  }
+
+  .scoreTable th {
+    font-size: 0.65rem;
+  }
+
+  .categoryIcon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .emojiIcon {
+    font-size: 1rem;
+  }
+
+  .cumulativeScores {
+    padding: var(--space-3);
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+  }
+
+  .scoreValue {
+    font-size: 1.5rem;
+  }
+
+  .scoreLabel {
+    font-size: 0.6rem;
+  }
+
+  .nextButton {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .modal {
+    padding: var(--space-3);
+  }
+
+  .title {
+    font-size: 1.1rem;
+  }
+
+  .scoreTable th,
+  .scoreTable td {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+
+  .categoryName {
+    font-size: 0.7rem;
+  }
+
+  .scoreValue {
+    font-size: 1.25rem;
+  }
+}

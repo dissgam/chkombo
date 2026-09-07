@@ -1,0 +1,94 @@
+/* PlayerHand Component Styles */
+
+.hand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 4px;
+  /* Responsive min-width to prevent layout shift when cards change */
+  min-width: min(320px, 90vw);
+  /* Min-height prevents layout shift when last card is played */
+  min-height: calc(var(--card-height) + 8px);
+  /* Prevent text selection in hand area */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hand.human {
+  /* Human hand at bottom */
+}
+
+.hand.cpu {
+  /* CPU hand at top */
+}
+
+/* Clickable hand (spectator mode toggle) */
+.hand.clickable {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color var(--duration-fast);
+}
+
+.hand.clickable:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.handCard {
+  transition: transform var(--duration-fast);
+  /* Ensure cards are positioned for z-index to work */
+  position: relative;
+  z-index: 1;
+}
+
+/* Raise card above siblings on hover for human hand */
+.hand.human .handCard:hover {
+  z-index: 20;
+}
+
+/* Ensure selected/active cards stay on top */
+.hand.human .handCard:active,
+.hand.human .handCard:focus-within {
+  z-index: 30;
+}
+
+/* Mobile: tighter layout */
+@media (max-width: 600px) {
+  .hand {
+    gap: var(--space-2);
+    padding: var(--space-2);
+    min-width: auto;
+    /* Scale down flex items if needed, but don't force clip */
+    flex-wrap: wrap;
+    width: 100%;
+    /* Match table width: 4 cards per row */
+    max-width: calc(4 * var(--card-width) + 3 * var(--space-2) + 2 * var(--space-4));
+  }
+}
+
+@media (max-width: 480px) {
+  .hand {
+    gap: var(--space-1);
+    padding: var(--space-1);
+    /* Limit to 4 cards per row */
+    max-width: calc(4 * var(--card-width) + 3 * var(--space-2) + 2 * var(--space-4));
+  }
+}
+
+@media (max-width: 380px) {
+  .hand {
+    /* Tighter gaps */
+    gap: 2px;
+    /* Limit to 3 cards per row */
+    max-width: calc(3 * var(--card-width) + 2 * var(--space-1) + 2 * var(--space-2));
+  }
+}
+
+/* Landscape mobile - compact horizontal hand (phones only - requires small width too) */
+@media (max-height: 500px) and (max-width: 900px) and (orientation: landscape) {
+  .hand {
+    gap: var(--space-1);
+    padding: var(--space-1);
+    min-width: auto;
+  }
+}

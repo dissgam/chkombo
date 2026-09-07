@@ -1,0 +1,289 @@
+/* CapturedPile Component Styles */
+
+.pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-1);
+}
+
+.clickable {
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.15s, transform 0.15s;
+}
+
+/* Pass pointer events from all descendants to parent for consistent click area */
+.clickable * {
+  pointer-events: none;
+}
+
+.clickable:hover {
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+.clickable:active {
+  transform: scale(0.98);
+}
+
+.pileStack {
+  position: relative;
+  width: var(--card-width);
+  /* Height includes card + generous buffer for stacked layers offset */
+  /* Using percentage of card height makes it scale-resistant */
+  height: calc(var(--card-height) * 1.08);
+  margin-bottom: 4px;
+}
+
+/* Stacked cards effect - offsets handled by inline transforms */
+.stackedCard {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.pileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  /* Ensure stats appear above stacked cards */
+  position: relative;
+  z-index: 10;
+}
+
+.cardCount {
+  background: var(--control-bg-light, rgba(0, 0, 0, 0.3));
+  color: var(--color-text-primary);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: calc(12px * var(--font-scale, 1));
+  font-weight: bold;
+}
+
+.statsRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: calc(11px * var(--font-scale, 1));
+  color: var(--color-text-secondary);
+  background: var(--control-bg-light, rgba(0, 0, 0, 0.2));
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+.coinIcon {
+  color: #DAA520;
+  font-size: calc(10px * var(--font-scale, 1));
+}
+
+.scopaIcon {
+  color: var(--color-accent);
+  font-size: calc(10px * var(--font-scale, 1));
+}
+
+.setteBello {
+  background: linear-gradient(135deg, #DAA520, #B8860B);
+  color: #000;
+  font-size: calc(10px * var(--font-scale, 1));
+  font-weight: bold;
+  padding: 2px 5px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.setteBelloContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.scopaMarkers {
+  display: flex;
+  gap: 4px;
+}
+
+.scopaMarker {
+  width: 12px;
+  height: 12px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.playerLabel {
+  font-size: calc(10px * var(--font-scale, 1));
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  text-align: center;
+  /* Ensure label appears above stacked cards */
+  position: relative;
+  z-index: 10;
+}
+
+.emptyPile {
+  width: var(--card-width);
+  height: var(--card-height);
+  border: 2px dashed var(--dashed-border-color, rgba(255, 255, 255, 0.2));
+  border-radius: var(--card-border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--empty-area-bg, transparent);
+}
+
+.emptyPile span {
+  font-size: calc(10px * var(--font-scale, 1));
+  color: var(--empty-label-color, var(--color-text-secondary));
+}
+
+/* Mobile responsive styles */
+@media (max-width: 600px) {
+  .pile {
+    padding: var(--space-1);
+    /* Increase gap to prevent overlap with stacked cards */
+    gap: 8px;
+  }
+
+  .pileInfo {
+    gap: 2px;
+  }
+
+  .cardCount {
+    font-size: calc(10px * var(--font-scale, 1));
+    padding: 1px 5px;
+  }
+
+  .stat {
+    font-size: calc(9px * var(--font-scale, 1));
+    padding: 1px 4px;
+  }
+
+  .playerLabel {
+    font-size: calc(8px * var(--font-scale, 1));
+  }
+
+  .setteBello {
+    font-size: calc(8px * var(--font-scale, 1));
+    padding: 1px 3px;
+  }
+
+  .scopaMarker {
+    width: 8px;
+    height: 8px;
+  }
+
+  .statsRow {
+    gap: 4px;
+  }
+
+  /* Scale down the entire pile to prevent overflow in top corners */
+  .pile {
+    transform: scale(0.85);
+    transform-origin: top right;
+  }
+}
+
+@media (max-width: 480px) {
+  .pile {
+    padding: 2px;
+    gap: 6px;
+  }
+
+  /* Bumped from 9/8px — pile card-count + coin/sette/scopa stats were
+   * called out as too small on a Moto G84 (~412 CSS px). ≥11px now. */
+  .cardCount {
+    font-size: calc(12px * var(--font-scale, 1));
+    padding: 1px 5px;
+  }
+
+  .stat {
+    font-size: calc(11px * var(--font-scale, 1));
+    padding: 1px 4px;
+  }
+
+  .playerLabel {
+    display: none;
+    /* Hide label to save space */
+  }
+
+  .scopaMarker {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@media (max-width: 380px) {
+  .pileInfo {
+    gap: 1px;
+  }
+
+  .statsRow {
+    gap: 2px;
+  }
+
+  .cardCount {
+    font-size: calc(11px * var(--font-scale, 1));
+  }
+
+  .stat {
+    font-size: calc(10px * var(--font-scale, 1));
+  }
+
+  .setteBello {
+    font-size: calc(10px * var(--font-scale, 1));
+  }
+}
+
+/* Landscape mobile - vertical pile layout (phones only - requires small width too) */
+@media (max-height: 500px) and (max-width: 900px) and (orientation: landscape) {
+  .pile {
+    padding: 2px;
+    gap: 2px;
+    transform: scale(0.85);
+    transform-origin: center center;
+  }
+
+  .pileInfo {
+    gap: 1px;
+  }
+
+  .cardCount {
+    font-size: calc(8px * var(--font-scale, 1));
+    padding: 1px 4px;
+  }
+
+  .statsRow {
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat {
+    font-size: calc(7px * var(--font-scale, 1));
+    padding: 1px 3px;
+  }
+
+  .playerLabel {
+    font-size: calc(7px * var(--font-scale, 1));
+  }
+
+  .setteBello {
+    font-size: calc(7px * var(--font-scale, 1));
+    padding: 1px 2px;
+  }
+
+  .scopaMarker {
+    width: 6px;
+    height: 6px;
+  }
+}

@@ -1,0 +1,145 @@
+/* Card Component Styles */
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  border-radius: var(--card-border-radius);
+  position: relative;
+  cursor: pointer;
+  /* Use CSS transitions only for box-shadow; transform is handled by Framer Motion */
+  transition: box-shadow var(--duration-fast) ease-out;
+  /* Prevent text selection and native drag */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+  background-color: #ffffff;
+  overflow: hidden;
+  /* Optional outline for visibility on light backgrounds (e.g., tablecloth) */
+  outline: var(--card-outline, none);
+}
+
+/* Scale img to clip SVG's built-in border */
+.card>img {
+  width: var(--card-img-scale);
+  height: var(--card-img-scale);
+  margin: var(--card-img-offset);
+  object-fit: cover;
+  /* Prevent native image drag */
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.card:hover:not(.disabled):not(.selected) {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card.selected,
+.card.selected:hover {
+  box-shadow: 0 0 0 4px var(--color-accent), 0 0 20px rgba(212, 175, 55, 0.6), var(--shadow-card-hover);
+  z-index: 10;
+}
+
+.card.highlighted {
+  box-shadow: 0 0 0 2px var(--color-accent-light), var(--shadow-card);
+  animation: pulse 1.5s infinite;
+}
+
+/* Selected overrides highlighted */
+.card.highlighted.selected,
+.card.highlighted.selected:hover {
+  box-shadow: 0 0 0 4px var(--color-accent), 0 0 20px rgba(212, 175, 55, 0.6), var(--shadow-card-hover);
+  animation: none;
+  z-index: 10;
+}
+
+.card.disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.card.draggable {
+  cursor: grab;
+  /* Only draggable cards need touch-action: none for Framer Motion drag */
+  touch-action: none;
+}
+
+.card.draggable:active {
+  cursor: grabbing;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--color-accent-light), var(--shadow-card);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px var(--color-accent-light), var(--shadow-card);
+  }
+}
+
+/* Card SVG container - scales SVG to fill card */
+.card>svg {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* Value display in corners */
+.cornerValue {
+  position: absolute;
+  font-size: calc(12px * var(--font-scale, 1));
+  font-weight: bold;
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.cornerValue.topLeft {
+  top: 4px;
+  left: 4px;
+}
+
+.cornerValue.bottomRight {
+  bottom: 4px;
+  right: 4px;
+  transform: rotate(180deg);
+}
+
+/* Center suit symbol */
+.centerSuit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(28px * var(--font-scale, 1));
+}
+
+/* Suit colors */
+.coins {
+  color: #d4a017;
+}
+
+.cups {
+  color: #1976d2;
+}
+
+.swords {
+  color: #546e7a;
+}
+
+.clubs {
+  color: #2e7d32;
+}
+
+/* Corner suit small */
+.cornerSuit {
+  font-size: calc(10px * var(--font-scale, 1));
+}

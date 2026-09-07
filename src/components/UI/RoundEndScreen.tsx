@@ -1,0 +1,456 @@
+// Step 8.4: RoundEndScreen Component with card display and hover highlighting
+
+import { useState, useMemo, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import type { Card, RoundScore } from '../../games/scopa/types';
+import type { AIType } from '../../games/scopa/ai';
+import { assetUrl } from '../../assetUrl';
+import { PRIME_VALUES, SUITS } from '../../games/scopa/constants';
+import { CardImage } from '../Card/CardImage';
+import { AIPlayerLabel } from './AIPlayerLabel';
+import { PersonIcon } from './PersonIcon';
+import { useDeck } from '../../contexts/DeckContext';
+import { useT } from '../../i18n/LanguageContext';
+import type { DeckType } from '../../hooks/useSettings';
+import styles from './RoundEndScreen.module.css';
+
+type HoverCategory = 'carte' | 'denari' | 'settebello' | 'primiera' | 'scopa' | null;
+
+// Custom SVG icons for score categories
+function CardsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" className={styles.categoryIconSvg}>
+      {/* Stack of cards - 3 cards fanned */}
+      <rect x="1" y="5" width="12" height="16" rx="1.5" fill="#f5f5dc" stroke="#666" strokeWidth="0.8" transform="rotate(-10 7 13)"/>
+      <rect x="6" y="4" width="12" height="16" rx="1.5" fill="#f5f5dc" stroke="#666" strokeWidth="0.8"/>
+      <rect x="11" y="5" width="12" height="16" rx="1.5" fill="#f5f5dc" stroke="#666" strokeWidth="0.8" transform="rotate(10 17 13)"/>
+    </svg>
+  );
+}
+
+function CoinIcon({ deckType }: { deckType: DeckType }) {
+  // Uses authentic denari SVG from Wikimedia Commons based on deck type
+  const coinPath = assetUrl(`/cards/${deckType}/suits/coins.svg`);
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" className={styles.categoryIconSvg}>
+      <image href={coinPath} x="2" y="2" width="20" height="20" />
+    </svg>
+  );
+}
+
+function SetteBelloIcon({ deckType }: { deckType: DeckType }) {
+  // 7 of Coins card with authentic coins in 2-1-2-2 pattern based on deck type
+  const coinSize = 4.5;
+  const coinPath = assetUrl(`/cards/${deckType}/suits/coins.svg`);
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" className={styles.categoryIconSvg}>
+      {/* Card background */}
+      <rect x="3" y="1" width="18" height="22" rx="2" fill="#f5f5dc" stroke="#333" strokeWidth="1"/>
+      {/* Row 1 - 2 coins */}
+      <image href={coinPath} x={9 - coinSize/2} y={4.5 - coinSize/2} width={coinSize} height={coinSize} />
+      <image href={coinPath} x={15 - coinSize/2} y={4.5 - coinSize/2} width={coinSize} height={coinSize} />
+      {/* Row 2 - 1 coin */}
+      <image href={coinPath} x={12 - coinSize/2} y={9 - coinSize/2} width={coinSize} height={coinSize} />
+      {/* Row 3 - 2 coins */}
+      <image href={coinPath} x={9 - coinSize/2} y={14 - coinSize/2} width={coinSize} height={coinSize} />
+      <image href={coinPath} x={15 - coinSize/2} y={14 - coinSize/2} width={coinSize} height={coinSize} />
+      {/* Row 4 - 2 coins */}
+      <image href={coinPath} x={9 - coinSize/2} y={19 - coinSize/2} width={coinSize} height={coinSize} />
+      <image href={coinPath} x={15 - coinSize/2} y={19 - coinSize/2} width={coinSize} height={coinSize} />
+    </svg>
+  );
+}
+
+function PrimieraIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" className={styles.categoryIconSvg}>
+      <polygon
+        points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"
+        fill="url(#starGradient)"
+        stroke="#8B6914"
+        strokeWidth="1"
+      />
+      <defs>
+        <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFD700"/>
+          <stop offset="100%" stopColor="#DAA520"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+function ScopaIcon() {
+  return <span className={styles.emojiIcon}>🧹</span>;
+}
+
+interface RoundEndScreenProps {
+  roundNumber: number;
+  humanScore: RoundScore;
+  cpuScore: RoundScore;
+  cumulativeHuman: number;
+  cumulativeCpu: number;
+  humanCaptured: Card[];
+  cpuCaptured: Card[];
+  humanScopaCaptures: Card[][];
+  cpuScopaCaptures: Card[][];
+  isGameOver?: boolean;
+  onNextRound: () => void;
+  onShowGameEnd?: () => void;
+  /** Player 1 name (defaults to "You", fallback if AI type not provided) */
+  player1Name?: string;
+  /** Player 2 name (defaults to "CPU", fallback if AI type not provided) */
+  player2Name?: string;
+  /** Token stats for player 1 (if using LLM) */
+  /** Token stats for player 2 (if using LLM) */
+  /** Player 1 AI type (for rendering proper icon) */
+  player1AIType?: AIType;
+  /** Player 1 model (for LLM AIs) */
+  /** Player 2 AI type (for rendering proper icon) */
+  player2AIType?: AIType;
+  /** Player 2 model (for LLM AIs) */
+  /** Auto-advance to next round after delay (for spectator mode) */
+  autoAdvance?: boolean;
+  /** Delay in ms before auto-advancing (default 2000) */
+  autoAdvanceDelay?: number;
+  // Multiplayer next round confirmation
+  /** Whether this player has requested next round (multiplayer) */
+  nextRoundRequested?: boolean;
+  /** Whether opponent has requested next round (multiplayer) */
+  opponentRequestedNextRound?: boolean;
+  /** Opponent's name for waiting message (multiplayer) */
+  opponentName?: string;
+}
+
+// Get the best prime card for each suit
+function getPrimeCards(captured: Card[]): Card[] {
+  const primeCards: Card[] = [];
+  for (const suit of SUITS) {
+    const suitCards = captured.filter(c => c.suit === suit);
+    if (suitCards.length > 0) {
+      // Find card with highest prime value
+      const bestCard = suitCards.reduce((best, card) =>
+        PRIME_VALUES[card.value] > PRIME_VALUES[best.value] ? card : best
+      );
+      primeCards.push(bestCard);
+    }
+  }
+  return primeCards;
+}
+
+// Check if a card should be highlighted based on current hover
+function shouldHighlight(card: Card, category: HoverCategory, scopaCardIds: Set<string>): boolean {
+  if (!category) return false;
+
+  switch (category) {
+    case 'carte':
+      return true; // All cards count for carte lungo
+    case 'denari':
+      return card.suit === 'coins';
+    case 'settebello':
+      return card.suit === 'coins' && card.value === 7;
+    case 'primiera':
+      return false; // Handled separately with getPrimeCards
+    case 'scopa':
+      return scopaCardIds.has(card.id); // Highlight cards that formed scopas
+    default:
+      return false;
+  }
+}
+
+export function RoundEndScreen({
+  roundNumber,
+  humanScore,
+  cpuScore,
+  cumulativeHuman,
+  cumulativeCpu,
+  humanCaptured,
+  cpuCaptured,
+  humanScopaCaptures,
+  cpuScopaCaptures,
+  isGameOver,
+  onNextRound,
+  onShowGameEnd,
+  player1Name,
+  player2Name = 'CPU',
+  player1AIType,
+  player2AIType,
+  autoAdvance = false,
+  autoAdvanceDelay = 2000,
+  nextRoundRequested,
+  opponentRequestedNextRound,
+  opponentName,
+}: RoundEndScreenProps) {
+  const t = useT();
+  const [hoveredCategory, setHoveredCategory] = useState<HoverCategory>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const deckType = useDeck();
+  const isMultiplayer = nextRoundRequested !== undefined;
+  const p1Name = player1Name ?? t.common.you;
+  const p1IsYou = !player1AIType && (p1Name === t.common.you || p1Name === 'You');
+  const p2IsYou = !player2AIType && (player2Name === t.common.you || player2Name === 'You');
+
+  // Auto-advance timer for spectator mode
+  useEffect(() => {
+    if (!autoAdvance) {
+      setCountdown(null);
+      return;
+    }
+
+    // Start countdown
+    setCountdown(Math.ceil(autoAdvanceDelay / 1000));
+
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null || prev <= 1) return null;
+        return prev - 1;
+      });
+    }, 1000);
+
+    const advanceTimer = setTimeout(() => {
+      if (isGameOver && onShowGameEnd) {
+        onShowGameEnd();
+      } else {
+        onNextRound();
+      }
+    }, autoAdvanceDelay);
+
+    return () => {
+      clearTimeout(advanceTimer);
+      clearInterval(countdownInterval);
+    };
+  }, [autoAdvance, autoAdvanceDelay, isGameOver, onNextRound, onShowGameEnd]);
+
+  // Render player names with proper AI icons
+  const renderPlayer1Name = (): ReactNode => {
+    if (player1AIType) {
+      return <AIPlayerLabel aiType={player1AIType} />;
+    }
+    // Human player with person icon
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3em' }}>
+        <PersonIcon size="1em" />
+        <span>{p1Name}</span>
+      </span>
+    );
+  };
+
+  const renderPlayer2Name = (): ReactNode => {
+    if (player2AIType) {
+      return <AIPlayerLabel aiType={player2AIType} />;
+    }
+    return player2Name;
+  };
+
+  // Helper to format primiera score
+  const formatPrime = (prime: number | null) => prime !== null ? prime.toString() : '-';
+
+  // Get prime cards for each player
+  const humanPrimeCards = useMemo(() => getPrimeCards(humanCaptured), [humanCaptured]);
+  const cpuPrimeCards = useMemo(() => getPrimeCards(cpuCaptured), [cpuCaptured]);
+  const humanPrimeIds = useMemo(() => new Set(humanPrimeCards.map(c => c.id)), [humanPrimeCards]);
+  const cpuPrimeIds = useMemo(() => new Set(cpuPrimeCards.map(c => c.id)), [cpuPrimeCards]);
+
+  // Get scopa card IDs for each player
+  const humanScopaIds = useMemo(
+    () => new Set(humanScopaCaptures.flat().map(c => c.id)),
+    [humanScopaCaptures]
+  );
+  const cpuScopaIds = useMemo(
+    () => new Set(cpuScopaCaptures.flat().map(c => c.id)),
+    [cpuScopaCaptures]
+  );
+
+  // Check if card is highlighted
+  const isHighlighted = (card: Card, isHuman: boolean) => {
+    if (!hoveredCategory) return false;
+    if (hoveredCategory === 'primiera') {
+      return isHuman ? humanPrimeIds.has(card.id) : cpuPrimeIds.has(card.id);
+    }
+    const scopaIds = isHuman ? humanScopaIds : cpuScopaIds;
+    return shouldHighlight(card, hoveredCategory, scopaIds);
+  };
+
+  // Categories with counts and winner highlighting
+  const categories: Array<{
+    id: HoverCategory;
+    name: string;
+    icon: React.ReactNode;
+    humanCount: string | number;
+    cpuCount: string | number;
+    humanWon: boolean;
+    cpuWon: boolean;
+  }> = [
+    {
+      id: 'carte',
+      name: 'Carte Lungo',
+      icon: <CardsIcon />,
+      humanCount: humanScore.counts.cards,
+      cpuCount: cpuScore.counts.cards,
+      humanWon: humanScore.cards > 0,
+      cpuWon: cpuScore.cards > 0,
+    },
+    {
+      id: 'denari',
+      name: 'Denari',
+      icon: <CoinIcon deckType={deckType} />,
+      humanCount: humanScore.counts.coins,
+      cpuCount: cpuScore.counts.coins,
+      humanWon: humanScore.coins > 0,
+      cpuWon: cpuScore.coins > 0,
+    },
+    {
+      id: 'settebello',
+      name: 'Sette Bello',
+      icon: <SetteBelloIcon deckType={deckType} />,
+      humanCount: humanScore.setteBello > 0 ? '✓' : '-',
+      cpuCount: cpuScore.setteBello > 0 ? '✓' : '-',
+      humanWon: humanScore.setteBello > 0,
+      cpuWon: cpuScore.setteBello > 0,
+    },
+    {
+      id: 'primiera',
+      name: 'Primiera',
+      icon: <PrimieraIcon />,
+      humanCount: formatPrime(humanScore.counts.prime),
+      cpuCount: formatPrime(cpuScore.counts.prime),
+      humanWon: humanScore.prime > 0,
+      cpuWon: cpuScore.prime > 0,
+    },
+    {
+      id: 'scopa',
+      name: 'Scopa',
+      icon: <ScopaIcon />,
+      humanCount: humanScore.scopas || '-',
+      cpuCount: cpuScore.scopas || '-',
+      humanWon: humanScore.scopas > cpuScore.scopas,
+      cpuWon: cpuScore.scopas > humanScore.scopas,
+    },
+  ];
+
+  return (
+    <div className={styles.overlay}>
+      {/* Human cards on the left */}
+      <div className={styles.cardColumn}>
+        <div className={styles.cardColumnLabel} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>
+            {p1IsYou
+              ? t.roundEnd.yourCards
+              : <>{t.roundEnd.cardsOfPrefix}{renderPlayer1Name()}{t.roundEnd.cardsOfSuffix}</>}
+          </span>
+        </div>
+        <div className={styles.cardGrid}>
+          {humanCaptured.map(card => (
+            <div
+              key={card.id}
+              className={`${styles.miniCard} ${isHighlighted(card, true) ? styles.highlighted : ''} ${hoveredCategory && !isHighlighted(card, true) ? styles.dimmed : ''}`}
+            >
+              <CardImage card={card} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Score modal in center */}
+      <div className={styles.modal}>
+        <h2 className={styles.title}>{t.roundEnd.title(roundNumber)}</h2>
+
+        <table className={styles.scoreTable}>
+          <thead>
+            <tr>
+              <th>{t.gameEnd.category}</th>
+              <th>{renderPlayer1Name()}</th>
+              <th>{renderPlayer2Name()}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map((cat) => (
+              <tr
+                key={cat.name}
+                className={`${styles.categoryRow} ${hoveredCategory === cat.id ? styles.hoveredRow : ''}`}
+                onMouseEnter={() => setHoveredCategory(cat.id)}
+                onMouseLeave={() => setHoveredCategory(null)}
+              >
+                <td className={styles.categoryCell}>
+                  <span className={styles.categoryIcon}>
+                    {cat.icon}
+                  </span>
+                  <span className={styles.categoryName}>{cat.name}</span>
+                </td>
+                <td className={cat.humanWon ? styles.winner : ''}>
+                  {cat.humanCount}
+                </td>
+                <td className={cat.cpuWon ? styles.winner : ''}>
+                  {cat.cpuCount}
+                </td>
+              </tr>
+            ))}
+            <tr className={styles.totalRow}>
+              <td>{t.roundEnd.roundTotal}</td>
+              <td className={humanScore.total > cpuScore.total ? styles.winner : ''}>
+                +{humanScore.total}
+              </td>
+              <td className={cpuScore.total > humanScore.total ? styles.winner : ''}>
+                +{cpuScore.total}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className={styles.cumulativeScores}>
+          <div className={styles.scoreBox}>
+            <span className={styles.scoreLabel}>{renderPlayer1Name()}</span>
+            <span className={styles.scoreValue}>{cumulativeHuman}</span>
+          </div>
+          <span className={styles.scoreDivider}>-</span>
+          <div className={styles.scoreBox}>
+            <span className={styles.scoreLabel}>{renderPlayer2Name()}</span>
+            <span className={styles.scoreValue}>{cumulativeCpu}</span>
+          </div>
+        </div>
+
+        {/* Multiplayer waiting message */}
+        {isMultiplayer && (
+          <div className={styles.waitingSection}>
+            {nextRoundRequested && !opponentRequestedNextRound ? (
+              <p className={styles.waitingMessage}>{t.roundEnd.waitingContinue(opponentName ?? t.common.opponent)}</p>
+            ) : opponentRequestedNextRound && !nextRoundRequested ? (
+              <p className={styles.waitingMessage}>{t.roundEnd.readyContinue(opponentName ?? t.common.opponent)}</p>
+            ) : null}
+          </div>
+        )}
+
+        <button
+          className={`${styles.nextButton} ${autoAdvance ? styles.autoAdvancing : ''} ${nextRoundRequested ? styles.buttonDisabled : ''}`}
+          onClick={isGameOver ? onShowGameEnd : onNextRound}
+          disabled={nextRoundRequested}
+        >
+          {autoAdvance && countdown !== null
+            ? t.roundEnd.countdownIn(isGameOver ? t.roundEnd.results : t.roundEnd.nextRound, countdown)
+            : isGameOver ? t.roundEnd.seeResults : (nextRoundRequested ? t.roundEnd.waiting : t.roundEnd.nextRound)}
+        </button>
+      </div>
+
+      {/* CPU cards on the right */}
+      <div className={styles.cardColumn}>
+        <div className={styles.cardColumnLabel} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>
+            {p2IsYou
+              ? t.roundEnd.yourCards
+              : <>{t.roundEnd.cardsOfPrefix}{renderPlayer2Name()}{t.roundEnd.cardsOfSuffix}</>}
+          </span>
+        </div>
+        <div className={styles.cardGrid}>
+          {cpuCaptured.map(card => (
+            <div
+              key={card.id}
+              className={`${styles.miniCard} ${isHighlighted(card, false) ? styles.highlighted : ''} ${hoveredCategory && !isHighlighted(card, false) ? styles.dimmed : ''}`}
+            >
+              <CardImage card={card} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

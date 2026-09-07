@@ -1,0 +1,414 @@
+/* CSS Variables for Scopa Game */
+:root {
+  /* Table colors */
+  --color-table: #1B5E20;
+  --color-table-dark: #145217;
+
+  /* Card colors */
+  --color-card-back: #1a237e;
+  --color-card-face: #fafafa;
+
+  /* Accent colors */
+  --color-accent: #D4AF37;
+  --color-accent-light: #e6c65a;
+
+  /* Text colors */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-text-dark: #212121;
+
+  /* Spacing scale (4px base unit) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Animation durations */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+
+  /* Card dimensions (1:1.633 ratio) - scales with viewport height */
+  /* Relative to window height, scales with zoom level */
+  /* At 100% zoom on 900px height: ~99px width, ~162px height */
+  /* At 125% zoom: cards scale down proportionally */
+  /* Lower minimums allow smooth scaling on short viewports */
+  --card-width: clamp(32px, 11vh, 110px);
+  --card-height: clamp(52px, 18vh, 180px);
+  --card-border-radius: 6px;
+
+  /* Playing area width - enough for scoreboard + pile on same row */
+  --playing-area-width: min(95vw, 1000px);
+
+  /* Mini card dimensions for RoundEndScreen */
+  --mini-card-width: 46px;
+  --mini-card-height: 76px;
+
+  /* Card image scaling (clips SVG's built-in border) */
+  --card-img-scale: 100%;
+  --card-img-offset: 0%;
+
+  /* Card back image scaling */
+  --card-back-scale: 100%;
+  --card-back-offset: 0%;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Base styles */
+html {
+  /* --font-scale (accessibility "Text size" setting; default 1) scales
+     the root font, so every rem-based text resizes. Cards use vw/vh and
+     stay put. index.html seeds the var pre-paint to avoid a flash. */
+  font-size: calc(16px * var(--font-scale, 1));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--color-table);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Tablecloth Pattern - Classic Gingham (softened/pastel) */
+body.table-tablecloth {
+  /* Tie size to card width for consistent proportions */
+  --tablecloth-size: var(--card-width);
+  /* Solid background color - pattern is in ::before */
+  background-color: #faf8f5;
+  /* Keep dark controls (same as green table) */
+  --control-bg: rgba(0, 0, 0, 0.75);
+  --control-bg-light: rgba(0, 0, 0, 0.6);
+  /* Warm ivory overlay for empty pile and play area (darker for less contrast) */
+  --dashed-border-color: rgba(139, 90, 43, 0.4);
+  --empty-area-bg: rgba(235, 225, 200, 0.85);
+  --table-area-bg: rgba(230, 220, 195, 0.8);
+  /* Card outline for visibility on tablecloth */
+  --card-outline: 1px solid rgba(0, 0, 0, 0.2);
+  /* Dark text for empty labels on light backgrounds */
+  --empty-label-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Tablecloth pattern layer with blur - only affects the pattern, not content */
+body.table-tablecloth::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    /* Horizontal pastel red stripes */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 50%,
+      rgba(200, 70, 85, 0.42) 50%,
+      rgba(200, 70, 85, 0.42) 100%
+    ),
+    /* Vertical pastel red stripes */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 50%,
+      rgba(200, 70, 85, 0.42) 50%,
+      rgba(200, 70, 85, 0.42) 100%
+    );
+  background-size: var(--tablecloth-size) var(--tablecloth-size);
+  filter: blur(0.5px);
+}
+
+/* Global control panel class for tablecloth mode */
+.control-panel {
+  background: var(--control-bg, transparent);
+  padding: var(--space-3);
+  border-radius: 8px;
+}
+
+/* Phones (matches the win-odds panel's compact breakpoints): the panel
+   is centered in the same bottom strip as the turn label, so right-align
+   the controls column. Short labels ("Your turn") sit fully beside the
+   panel; long ones ("Esperto is thinking...") tuck BEHIND it (z below
+   the panel's 90) rather than rendering on top of its text. */
+@media (max-height: 760px), (max-width: 480px) {
+  .control-panel {
+    align-items: flex-end;
+    text-align: right;
+    position: relative;
+    z-index: 89;
+  }
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App container */
+.app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+/* Utility: visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===========================================
+   MOBILE RESPONSIVE STYLES
+   =========================================== */
+
+/* Form controls don't inherit font-size by default, so a button with no
+   explicit size renders at the UA default (~13px) and ignores the Text
+   Size (--font-scale) setting — e.g. the inline-styled ConfirmDialog
+   buttons. Inherit the (scaled) size so their text scales too. Buttons
+   that set their own font-size in a CSS module override this via
+   specificity, so they're unaffected. */
+button {
+  font-size: inherit;
+}
+
+/* Touch optimization - prevents 300ms tap delay */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Cards handle their own touch-action via CSS modules */
+
+/* Large phones and small tablets (landscape phones) */
+@media (max-width: 600px) {
+  :root {
+    /* Scale cards based on viewport height to fit in screen */
+    --card-width: clamp(45px, 11vh, 60px);
+    --card-height: clamp(74px, 18vh, 99px);
+    --card-border-radius: 5px;
+
+    /* Tighter spacing on mobile */
+    --space-4: 10px;
+    --space-5: 14px;
+    --space-6: 16px;
+  }
+
+  body {
+    /* iOS safe area support */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    /* Allow overscroll and ensuring overflow is possible */
+    overscroll-behavior: auto;
+    overflow-x: auto;
+    overflow-y: auto;
+    position: static;
+    height: auto;
+    min-height: 100vh;
+  }
+}
+
+/* Standard phones */
+@media (max-width: 480px) {
+  :root {
+    /* Width-based clamp so cards grow with PHONE WIDTH (a 411 CSS-px
+     * Moto G84 reviewer was previously getting the same 60 px cap as
+     * a 360 CSS-px phone because the prior clamp was vh-based). At
+     * 360 px we now get ~65, at 393 ~71, at 411 ~74 — all under the
+     * 88 cap so 3 cards + gaps still fit comfortably in the hand row.
+     * Height is the same ~1.6× width ratio Italian decks use. */
+    /* Trimmed a notch (was 18vw/29vw ≈ 74px at 412): the earlier bump
+       overcorrected — the real "too small" cause was desktop-site mode,
+       not the normal mobile size. Now ~66px at 412, ~58 at 360. */
+    --card-width: clamp(56px, 16vw, 80px);
+    --card-height: clamp(90px, 26vw, 128px);
+    --card-border-radius: 5px;
+
+    /* Tighter spacing */
+    --space-3: 4px;
+    --space-4: 6px;
+    --space-5: 8px;
+    --space-6: 10px;
+  }
+}
+
+/* (Removed the prior `≤380px` block — it inverted the trend by
+ * SHRINKING cards (40-50) below the 480 sizing (48-60) and dropped
+ * root font to 14px. On a Moto G84 / Pixel-class phone at ~360 CSS
+ * px, that produced ~9 mm wide cards with hard-to-read art; a 2-star
+ * Play review called this out directly. The ≤480 rules now cascade
+ * down to ~320px instead. If iPhone SE (320 px) ever needs a tighter
+ * layout, prefer scaling spacing rather than shrinking the cards. */
+
+/* Mobile landscape - only for actual phones (small viewport height AND width) */
+@media (max-height: 500px) and (max-width: 900px) and (orientation: landscape) {
+  :root {
+    /* In mobile landscape, height is the constraint - use smaller cards */
+    --card-width: clamp(36px, 12vh, 52px);
+    --card-height: clamp(59px, 19.6vh, 85px);
+
+    /* Reduced spacing */
+    --space-1: 3px;
+    --space-2: 4px;
+    --space-3: 6px;
+    --space-4: 8px;
+    --space-5: 10px;
+    --space-6: 12px;
+
+    --card-border-radius: 4px;
+
+    /* Narrower playing area in landscape */
+    --playing-area-width: min(70vw, 600px);
+  }
+
+  html {
+    font-size: calc(13px * var(--font-scale, 1));
+  }
+}
+
+/* Very short landscape (e.g., phones with notch) */
+@media (max-height: 400px) and (max-width: 900px) and (orientation: landscape) {
+  :root {
+    --card-width: clamp(28px, 10vh, 40px);
+    --card-height: clamp(46px, 16.4vh, 66px);
+    --space-2: 2px;
+    --space-3: 3px;
+    --space-4: 4px;
+  }
+
+  html {
+    font-size: calc(12px * var(--font-scale, 1));
+  }
+}
+
+/* ============================================================
+   Desktop-site mode rescue (detection in index.html).
+   When a phone is forced into Chrome's "Desktop site" mode the layout
+   viewport is locked at ~980px on a ~412px physical screen, and the
+   media queries above never reach the mobile range (and can't — the
+   viewport is immovable). So we force the whole app into a 412px mobile
+   column and scale it up by --dmode-scale (set by the inline detector)
+   to fill the locked viewport, pinning mobile sizing here since the
+   media queries can't fire.
+   ============================================================ */
+html.dmode {
+  /* Card sizing relative to the REAL column width (--dmode-width =
+     device screen width), mirroring the ≤480px rules' 18vw/29vw — vw
+     itself can't be used because it resolves against the locked ~980px
+     viewport, not the column. */
+  --card-width: clamp(56px, calc(var(--dmode-width, 412px) * 0.16), 80px);
+  --card-height: clamp(90px, calc(var(--dmode-width, 412px) * 0.26), 128px);
+  --card-border-radius: 5px;
+  --space-3: 4px;
+  --space-4: 6px;
+  --space-5: 8px;
+  --space-6: 10px;
+  /* --playing-area-width is min(95vw,1000px); 95vw of the locked
+     viewport is huge, so the top/bottom rows ran edge-to-edge and the
+     CPU pile / AI label clipped. Pin it just inside the column width. */
+  --playing-area-width: calc(var(--dmode-width, 412px) - 16px);
+  /* Block pinch-zoom (which fights the rescue scale) and horizontal
+     scroll into the blank backstop, but ALLOW vertical scroll — the
+     in-game layout fits one screen, but the start menu / settings can
+     be taller and must scroll. touch-action: pan-y permits vertical
+     panning only; pinch-zoom stays disabled (the meta user-scalable=no
+     is ignored in desktop mode, so this is where it's enforced).
+     Crucially the SCROLL CONTAINER is <html> (NOT zoomed) — finger-pan
+     then moves 1:1. The zoomed <body> must NOT also scroll (see below):
+     panning a zoomed scroll container divides the distance by the zoom
+     → the "stuck / snaps back / can't reach the bottom" jank. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: pan-y;
+  /* Backstop colour for any area the scaled body doesn't cover. */
+  background: var(--color-table);
+}
+html.dmode body {
+  /* The mobile column = the device's native CSS width. */
+  width: var(--dmode-width, 412px);
+  /* `zoom` (not transform: scale) so pointer/drag coordinates are
+     adjusted natively — transform breaks framer-motion drag. Chromium-
+     only, which is exactly what a TWA/Chrome runs. */
+  zoom: var(--dmode-scale, 1);
+  /* zoom does NOT rescale vh (100vh stays the inflated viewport), so
+     the full-height containers below are divided by --dmode-scale to
+     fill exactly one physical screen instead of scale× of empty green. */
+  min-height: calc(100vh / var(--dmode-scale, 1));
+  /* overflow: visible (NOT hidden/auto) so the zoomed body is NOT a
+     scroll container — tall content overflows up to <html>, which does
+     the (1:1, un-zoomed) scrolling. A 412px column never overflows
+     horizontally, so visible is safe on x too. */
+  overflow: visible;
+  touch-action: pan-y;
+}
+html.dmode #root {
+  min-height: calc(100vh / var(--dmode-scale, 1));
+}
+/* Tablecloth pattern lives in a position:fixed; z-index:-1 ::before,
+   which the dmode zoom hides (the body's own #faf8f5 background paints
+   over it → plain ivory "white screen"). Re-apply the gingham as the
+   body's OWN background-image (painted over its background-color, so it
+   shows) and drop the broken ::before. */
+html.dmode body.table-tablecloth {
+  background-image:
+    repeating-linear-gradient(
+      0deg, transparent, transparent 50%,
+      rgba(200, 70, 85, 0.42) 50%, rgba(200, 70, 85, 0.42) 100%),
+    repeating-linear-gradient(
+      90deg, transparent, transparent 50%,
+      rgba(200, 70, 85, 0.42) 50%, rgba(200, 70, 85, 0.42) 100%);
+  background-size: var(--tablecloth-size) var(--tablecloth-size);
+}
+html.dmode body.table-tablecloth::before {
+  display: none;
+}
+/* Modal panels (settings, rules, stats, …) sit in a position:fixed
+   overlay that centers them, and cap their own height at Xvh with
+   internal overflow-y:auto. In dmode, vh is the INFLATED viewport (zoom
+   doesn't rescale it), so the cap is ~scale× the physical screen: the
+   panel centers with its action buttons off the bottom of the screen,
+   and because its content fits inside that oversized cap, the internal
+   scroll never triggers — so the bottom is unreachable. Cap the panel
+   (the overlay's child) to the PHYSICAL screen height so it fits and
+   actually scrolls internally. The lowercase `_overlay_` / `_backdrop_`
+   substrings match only the CSS-module-hashed modal overlay classes;
+   the capitalised warningOverlay / deckSelectorOverlay are left alone. */
+html.dmode [class*="_overlay_"] > *,
+html.dmode [class*="_backdrop_"] > * {
+  max-height: calc(90vh / var(--dmode-scale, 1)) !important;
+}
+
+/* Desktop: Cards scale smoothly with viewport height via the vh-based clamp.
+   No breakpoints needed - the reduced minimums allow proper scaling. */

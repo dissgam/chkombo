@@ -1,0 +1,175 @@
+/* ScoreBoard Component Styles */
+
+.scoreBoard {
+  background: var(--control-bg, rgba(0, 0, 0, 0.4));
+  border-radius: 8px;
+  padding: var(--space-3);
+  color: var(--color-text-primary);
+  min-width: clamp(140px, 16vw, 200px);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.roundLabel {
+  font-size: calc(12px * var(--font-scale, 1));
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.roundNumber {
+  font-size: calc(14px * var(--font-scale, 1));
+  font-weight: bold;
+}
+
+.scores {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.playerScore {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.playerName {
+  font-size: calc(12px * var(--font-scale, 1));
+  white-space: nowrap;
+  flex: 1;
+}
+
+.playerName.current {
+  color: var(--color-accent);
+  /* No font-weight change to prevent layout shift */
+}
+
+.scoreValue {
+  font-size: calc(24px * var(--font-scale, 1));
+  font-weight: bold;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.targetScore {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+  font-size: calc(11px * var(--font-scale, 1));
+  color: var(--color-text-secondary);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 600px) {
+  .scoreBoard {
+    min-width: auto;
+    padding: var(--space-2);
+    background: var(--control-bg-light, rgba(0, 0, 0, 0.3));
+  }
+
+  .header {
+    margin-bottom: var(--space-1);
+    padding-bottom: var(--space-1);
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.15);
+  }
+
+  /* Mobile minimums bumped to ≥12px (Android a11y guideline) — prior
+   * 9-11px values were called out as unreadable in a 2-star Play
+   * review on a Moto G84 5G. */
+  .roundLabel {
+    font-size: calc(12px * var(--font-scale, 1));
+  }
+
+  .roundNumber {
+    font-size: calc(14px * var(--font-scale, 1));
+  }
+
+  .scores {
+    gap: var(--space-1);
+  }
+
+  .scoreValue {
+    font-size: calc(18px * var(--font-scale, 1));
+  }
+
+  .playerName {
+    font-size: calc(12px * var(--font-scale, 1));
+  }
+
+  .targetScore {
+    margin-top: var(--space-1);
+    font-size: calc(12px * var(--font-scale, 1));
+    padding-top: var(--space-1);
+  }
+}
+
+/* Desktop-site-mode rescue: force the ≤600px scoreboard sizing
+   (min-width: auto + smaller fonts) regardless of the locked ~980px
+   viewport. The desktop min-width (clamp(140px,16vw,200px)) + desktop
+   fonts made the scoreboard wide enough to shove the CPU pile off the
+   right edge of the 412px column. */
+:global(html.dmode) .scoreBoard {
+  min-width: auto;
+  padding: var(--space-2);
+  background: var(--control-bg-light, rgba(0, 0, 0, 0.3));
+}
+:global(html.dmode) .header {
+  margin-bottom: var(--space-1);
+  padding-bottom: var(--space-1);
+}
+:global(html.dmode) .roundLabel { font-size: calc(12px * var(--font-scale, 1)); }
+:global(html.dmode) .roundNumber { font-size: calc(14px * var(--font-scale, 1)); }
+:global(html.dmode) .scores { gap: var(--space-1); }
+:global(html.dmode) .scoreValue { font-size: calc(18px * var(--font-scale, 1)); }
+:global(html.dmode) .playerName { font-size: calc(12px * var(--font-scale, 1)); }
+:global(html.dmode) .targetScore {
+  margin-top: var(--space-1);
+  font-size: calc(12px * var(--font-scale, 1));
+  padding-top: var(--space-1);
+}
+
+/* Landscape mobile - very compact (phones only - requires small width too) */
+@media (max-height: 500px) and (max-width: 900px) and (orientation: landscape) {
+  .scoreBoard {
+    min-width: auto;
+    padding: var(--space-2);
+  }
+
+  .header {
+    margin-bottom: var(--space-1);
+    padding-bottom: var(--space-1);
+  }
+
+  .roundLabel {
+    font-size: calc(9px * var(--font-scale, 1));
+  }
+
+  .roundNumber {
+    font-size: calc(11px * var(--font-scale, 1));
+  }
+
+  .scores {
+    gap: var(--space-1);
+  }
+
+  .scoreValue {
+    font-size: calc(16px * var(--font-scale, 1));
+  }
+
+  .playerName {
+    font-size: calc(9px * var(--font-scale, 1));
+  }
+
+  .targetScore {
+    margin-top: var(--space-1);
+    font-size: calc(9px * var(--font-scale, 1));
+  }
+}

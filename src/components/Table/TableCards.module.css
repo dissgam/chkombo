@@ -1,0 +1,154 @@
+/* TableCards Component Styles */
+
+.tableContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 100%;
+}
+
+.deckArea {
+  flex-shrink: 0;
+}
+
+.tableArea {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 8px;
+  /* Min height = card height + padding to prevent layout shift when empty */
+  min-height: calc(var(--card-height) + 16px);
+  min-width: min(280px, 70vw);
+  /* Max 8 cards per row */
+  max-width: calc(8 * var(--card-width) + 7 * var(--space-3) + 16px);
+  flex: 1;
+  background: var(--table-area-bg, rgba(0, 0, 0, 0.1));
+  border-radius: 12px;
+  border: 2px dashed var(--dashed-border-color, rgba(255, 255, 255, 0.1));
+}
+
+.tableCard {
+  transition: transform var(--duration-fast);
+}
+
+/* Card being captured - levitate effect */
+.tableCard.capturing {
+  z-index: 10;
+  filter: brightness(1.2);
+}
+
+.emptyMessage {
+  color: var(--empty-label-color, var(--color-text-secondary));
+  font-style: italic;
+  font-size: calc(14px * var(--font-scale, 1));
+  white-space: nowrap;
+}
+
+/* Drop target state when card is being dragged */
+.dropTarget {
+  border-color: var(--color-accent);
+  background: rgba(212, 175, 55, 0.1);
+  box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+/* Mobile responsive styles - portrait */
+@media (max-width: 600px) and (orientation: portrait) {
+  .tableContainer {
+    gap: var(--space-2);
+    justify-content: center;
+    /* Allow it to shrink */
+    min-height: 0;
+  }
+
+  .tableArea {
+    padding: var(--space-2);
+    gap: var(--space-1);
+    /* Force 4 cards per row max: 4 * width + 3 * gap + 2 * padding */
+    max-width: calc(4 * var(--card-width) + 3 * var(--space-1) + 2 * var(--space-2));
+    flex: 1;
+    border-width: 1px;
+    background: var(--table-area-bg, rgba(0, 0, 0, 0.08));
+  }
+
+  .deckArea {
+    /* No forced order - let React control left/right placement */
+    /* Less margin */
+    margin-left: -5px;
+  }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  .tableContainer {
+    gap: var(--space-2);
+  }
+
+  .tableArea {
+    padding: var(--space-3);
+    border-radius: 8px;
+    /* Limit to ~4 cards per row */
+    max-width: calc(4 * var(--card-width) + 3 * var(--space-2) + 2 * var(--space-3));
+  }
+
+  .deckArea {
+    /* No scale */
+  }
+
+  .emptyMessage {
+    font-size: calc(12px * var(--font-scale, 1));
+  }
+}
+
+@media (max-width: 380px) and (orientation: portrait) {
+  .tableArea {
+    padding: var(--space-2);
+    /* Limit to 3 cards per row on very small screens */
+    max-width: calc(3 * var(--card-width) + 2 * var(--space-1) + 2 * var(--space-2));
+    gap: var(--space-1);
+  }
+
+  .deckArea {
+    /* No scale */
+  }
+}
+
+/* Desktop-site-mode rescue: force the ≤480px table sizing (≈4 cards
+   wide) regardless of the locked ~980px viewport, so the table + deck
+   fit the 412px column instead of using the base 8-card max-width and
+   spilling off the right edge. */
+:global(html.dmode) .tableContainer {
+  gap: var(--space-2);
+}
+:global(html.dmode) .tableArea {
+  padding: var(--space-3);
+  border-radius: 8px;
+  max-width: calc(4 * var(--card-width) + 3 * var(--space-2) + 2 * var(--space-3));
+}
+
+/* Landscape mobile (phones only - requires small width too) */
+@media (max-height: 500px) and (max-width: 900px) and (orientation: landscape) {
+  .tableContainer {
+    gap: var(--space-4);
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tableArea {
+    padding: var(--space-2);
+    gap: var(--space-1);
+    border-radius: 6px;
+    flex-wrap: nowrap;
+    max-width: calc(10 * var(--card-width) + 9 * var(--space-1) + 2 * var(--space-2));
+  }
+
+  .deckArea {
+    transform: none;
+  }
+
+  .emptyMessage {
+    font-size: calc(10px * var(--font-scale, 1));
+  }
+}
